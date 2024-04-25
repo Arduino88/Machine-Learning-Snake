@@ -2,6 +2,7 @@
 import pygame
 from pygame import Color
 import random
+from segment import Segment
 
 startposx = 2
 startposy = 2
@@ -9,36 +10,26 @@ scale = 50 # Pixels per column
 
 class Food:
     def __init__(self) -> None:
+        self.scale = scale
         self.respawn()
-    
+        
     def respawn(self):
         self.column = random.randint(1, 20)
         self.row = random.randint(1, 20)
-        self.x = self.column * 50
-        self.y = self.row * 50
-        self.surface = pygame.Surface((50, 50))
+        self.x = self.column * scale
+        self.y = self.row * scale
+        self.surface = pygame.Surface((self.scale, self.scale))
         self.surface.fill(Color("red"))
-        self.rect = self.surface.get_rect()
-        self.rect.topleft = (self.x, self.y)
+        self.rect = self.surface.get_rect(center=(self.x, self.y))
+        
+        """_summary_
+        mouse parking:
         
     
-
-class Segment:
-    def __init__(self) -> None:
-        self.lifespan = None
-        self.collision = False
         
-    def create(self, column, row, head: bool = False) -> None:
-        self.column = column
-        self.row = row
-        self.x = self.column * 50
-        self.y = self.row * 50
-        self.surface = pygame.Surface([30,30])
-        self.surface.fill(Color("grey"))
-        self.rect = self.surface.get_rect()
-        self.rect.center = (self.x, self.y)
-        self.is_head = head
-        self.collision = False
+        
+        """
+
         
     
         
@@ -56,8 +47,7 @@ class Snake:
         self.length += 1
         
         
-    def move(self) -> None:
-        
+    def move(self) -> None:       
         self.segments.append(Segment())
         self.segments[-1].create(column=self.head_column, row=self.head_row, head=False)
         
@@ -103,8 +93,9 @@ def main():
     food = Food()
     for i in range(snake.length):
         snake.grow()
-    # create a surface on screen that has the size of 240 x 180
-    screen = pygame.display.set_mode((1000,1000))
+
+    screen_scale = 20 * 50 + scale
+    screen = pygame.display.set_mode((screen_scale, screen_scale))
     screen.fill((100, 100, 100))
     
     
@@ -151,11 +142,8 @@ def main():
         
 
         snake.move()
-                        
-
                     
-        
-        pygame.draw.rect(screen,(100, 100, 90), [0, 0 , 1000, 1000])
+        pygame.draw.rect(screen,(100, 100, 90), [0, 0 , screen_scale, screen_scale])
             
         for segment in snake.segments:
             
