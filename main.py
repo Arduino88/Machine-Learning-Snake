@@ -2,7 +2,7 @@
 import pygame
 from pygame import Color
 import random
-from segment import Segment
+from snake_class import Segment
 
 scale = 50 # Pixels per column
 columns = 20 # Columns in the window
