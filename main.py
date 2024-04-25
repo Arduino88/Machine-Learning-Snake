@@ -4,9 +4,10 @@ from pygame import Color
 import random
 from segment import Segment
 
-startposx = 2
-startposy = 2
 scale = 50 # Pixels per column
+columns = 20 # Columns in the window
+rows = 20 # Rows in the window
+delay = 75 # milliseconds between each frame
 
 class Food:
     def __init__(self) -> None:
@@ -14,8 +15,8 @@ class Food:
         self.respawn()
         
     def respawn(self):
-        self.column = random.randint(1, 20)
-        self.row = random.randint(1, 20)
+        self.column = random.randint(0, columns - 1)
+        self.row = random.randint(0, columns - 1)
         self.x = self.column * scale
         self.y = self.row * scale
         self.surface = pygame.Surface((self.scale, self.scale))
@@ -24,58 +25,15 @@ class Food:
         
         """_summary_
         mouse parking:
-        
+        ss
     
-        
         
         """
-
         
     
         
 
-class Snake:
-    def __init__(self) -> None:
-        self.head_column = startposx
-        self.head_row = startposy
-        self.segments = []
-        self.direction = "right"
-        self.speed = 1
-        self.length = 3
-        
-    def grow(self) -> None:
-        self.length += 1
-        
-        
-    def move(self) -> None:       
-        self.segments.append(Segment())
-        self.segments[-1].create(column=self.head_column, row=self.head_row, head=False)
-        
-        
-        if self.direction == "right":
-            self.head_column += self.speed
-        elif self.direction == "left":
-            self.head_column -= self.speed
-        elif self.direction == "up":
-            self.head_row -= self.speed
-        elif self.direction == "down":
-            self.head_row += self.speed
-        
-        if len(self.segments) > self.length:
-            self.segments.pop(0)
 
-    
-    
-    
-    def check_collision(self):
-        if self.head_column > 20 or self.head_column < 0 or self.head_row > 20 or self.head_row < 0:
-            print('Off Screen')
-            exit()
-        
-        for segment in self.segments:
-            if self.head_column == segment.column and self.head_row == segment.row:
-                print('Hit itself')
-                exit()
         
         
 
@@ -94,15 +52,8 @@ def main():
     for i in range(snake.length):
         snake.grow()
 
-    screen_scale = 20 * 50 + scale
-    screen = pygame.display.set_mode((screen_scale, screen_scale))
+    screen = pygame.display.set_mode((columns * scale, columns * scale))
     screen.fill((100, 100, 100))
-    
-    
-    # define the position of the sprite
-    # how many pixels to move the each frame
-    step_x = 0
-    step_y = 0
              
     
     
@@ -143,7 +94,7 @@ def main():
 
         snake.move()
                     
-        pygame.draw.rect(screen,(100, 100, 90), [0, 0 , screen_scale, screen_scale])
+        pygame.draw.rect(screen,(100, 100, 90), [0, 0 , columns * scale, columns * scale])
             
         for segment in snake.segments:
             
@@ -155,7 +106,7 @@ def main():
         screen.blit(food.surface, (food.x, food.y))
         pygame.display.flip()
         snake.check_collision()
-        pygame.time.delay(75)
+        pygame.time.delay(delay)
         
 # run the main function only if this module is executed as the main script
 # (if you import this as a module then nothing is executed)
