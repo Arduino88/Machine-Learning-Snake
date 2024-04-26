@@ -1,17 +1,17 @@
 import pygame
 from pygame import Color, Surface
+import settings
 
-
+settings.init()
 class Snake:
+    
     def __init__(self) -> None:
-        self.head_column = self.startposx
-        self.head_row = self.startposy
+        self.head_column = settings.startposx
+        self.head_row = settings.startposy
         self.segments = []
         self.direction = "right"
         self.speed = 1
         self.length = 3
-        self.startposx = 2
-        self.startposy = 2
         
     def grow(self) -> None:
         self.length += 1
@@ -38,7 +38,7 @@ class Snake:
     
     
     def check_collision(self):
-        if self.head_column > columns - 1 or self.head_column < 0 or self.head_row > columns - 1 or self.head_row < 0:
+        if self.head_column > settings.columns - 1 or self.head_column < 0 or self.head_row > settings.columns - 1 or self.head_row < 0:
             print('Off Screen')
             exit()
         
