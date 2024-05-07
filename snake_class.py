@@ -51,7 +51,7 @@ class Segment:
     def __init__(self) -> None:
         self.lifespan = None
         self.collision = False
-        self.scale = 50
+        self.scale = settings.scale
         
     def create(self, column, row, head: bool = False) -> None:
         self.column = column

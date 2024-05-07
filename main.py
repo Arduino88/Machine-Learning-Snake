@@ -18,7 +18,10 @@ class Food:
         self.surface = pygame.Surface((self.scale, self.scale))
         self.surface.fill(Color("red"))
         self.rect = self.surface.get_rect(center=(self.x, self.y))
+        '''
+        CURSOR PARKING
         
+        '''
 
 
 def main():
@@ -26,7 +29,9 @@ def main():
     settings.init()
     pygame.init()
     
-    pygame.display.set_caption("minimal program")
+    pygame.display.set_caption("Snake")
+    img = pygame.image.load('snake-icon.png')
+    pygame.display.set_icon(img)
     snake = Snake()
     food = Food()
     for i in range(snake.length):
@@ -62,7 +67,7 @@ def main():
                 
         
         if not key_queue.empty():
-            print(key_queue.qsize())
+            #print(key_queue.qsize())
             snake.direction = key_queue.get()
         snake.move()
                     
