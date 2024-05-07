@@ -59,7 +59,7 @@ class Segment:
         self.x = self.column * self.scale
         self.y = self.row * self.scale
         self.surface = pygame.Surface([self.scale, self.scale])
-        self.surface.fill(Color("grey"))
+        self.surface.fill(Color("green"))
         self.rect = self.surface.get_rect()
         self.rect = self.surface.get_rect(center=(self.x, self.y))
 
