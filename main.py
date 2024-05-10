@@ -24,7 +24,7 @@ class Food:
         '''
 
 
-def main():
+if __name__=="__main__":
     
     settings.init()
     pygame.init()
@@ -86,5 +86,3 @@ def main():
         snake.check_collision()
         pygame.time.delay(settings.delay)
         
-if __name__=="__main__":
-    main()
