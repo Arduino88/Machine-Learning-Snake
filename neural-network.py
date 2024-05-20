@@ -18,31 +18,6 @@ def softmax(inputs):
     #print('probs:', probs)
     return probs
 
-def relu_derivative(self, dA, Z):
-    dZ = np.array(dA, copy = True)
-    dZ[Z <= 0] = 0
-    return dZ
-
-
-def CategoricalCrossEntropyLoss(prediction, desired) -> float:
-    if len(prediction[0])!= len(desired[0]):
-        raise ValueError('Unequal output shape')
-    
-    loss = 0.
-    #print('prediction initial', prediction)
-    print('desired', desired)
-    for i, output in enumerate(prediction[0]):
-        output = float(output)
-        #print('output', output)
-        #print('np.log(output):', np.log(output))
-        tempLoss = np.log(output) * desired[0][i]
-        if tempLoss != [np.nan]:
-            #print('temploss not nan:', tempLoss)
-            loss -= tempLoss
-    
-    print('CategoricalCrossEntropyLoss loss:', loss)
-    return loss
-
 
 
 class Perceptron:
@@ -131,47 +106,12 @@ class NeuralNetwork:
 
         return input
 
-    def backpropagate(self, result, desired):
-        loss = CategoricalCrossEntropyLoss(result, desired)
-
-        return loss
-
-
 def main():
 
-    input_path = 'data/mnist/'
-    training_images_filepath = join(input_path, 'train-images-idx3-ubyte/train-images-idx3-ubyte')
-    training_labels_filepath = join(input_path, 'train-labels-idx1-ubyte/train-labels-idx1-ubyte')
-    test_images_filepath = join(input_path, 't10k-images-idx3-ubyte/t10k-images-idx3-ubyte')
-    test_labels_filepath = join(input_path, 't10k-labels-idx1-ubyte/t10k-labels-idx1-ubyte')
-
-
-    mnistDataloader = MnistDataloader(training_images_filepath, training_labels_filepath, test_images_filepath, test_labels_filepath)
-    (x_train, y_train), (x_test, y_test) = mnistDataloader.load_data()
-
-    tempList = np.array(x_train[0])
-
-    print(tempList.shape)
-
     testNet = NeuralNetwork()
-    inputs = tempList
     testNet.addLayer(DenseLayer(28, 28, weightShape=(28, 28), activation='sigmoid'))
     testNet.addLayer(DenseLayer(10, 10, weightShape=(28, 28), activation='sigmoid'))
     testNet.addLayer(DenseLayer(1, 10, weightShape=(10, 10), activation='softmax'))
-    result = testNet.forwardPropagate(inputs)
-    ind = np.unravel_index(np.argmax(result, axis=None), result.shape)
-
-    print('Predicted class: ', ind[1])
-    print('maximum:', max(result[0]))
-    
-    print('Actual class', y_train[0])
-    
-    backPropArray = np.array([np.zeros(10)])
-    backPropArray[0][y_train[0] - 1] = 1
-    print('result:', result)
-
-
-    loss = testNet.backpropagate(result, backPropArray)
 
     #for layer in testNet.layers:
         #layer.print()
