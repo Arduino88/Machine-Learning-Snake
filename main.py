@@ -1,33 +1,86 @@
 import pygame
 from pygame import Color
 import random
-from snake_class import Snake
 import settings
 from queue import Queue
 
+random.seed(9)
+
 class Food:
-    def __init__(self) -> None:
-        self.scale = settings.scale
+    def __init__(self):
         self.respawn()
         
-    def respawn(self):
-        self.column = random.randint(0, settings.columns - 1)
-        self.row = random.randint(0, settings.columns - 1)
-        self.x = self.column * settings.scale
-        self.y = self.row * settings.scale
-        self.surface = pygame.Surface((self.scale, self.scale))
-        self.surface.fill(Color("red"))
-        self.rect = self.surface.get_rect(center=(self.x, self.y))
-        '''
-        CURSOR PARKING
+    def respawn(self, gridSize):
+        self.pos = (random.randint(0, gridSize), random.randint(0, gridSize))
+
+
+
+settings.init()
+
+class Snake:
+    
+    def __init__(self) -> None:
+        self.head_coords = settings.start_coords
+        self.direction = "right"
+        self.speed = settings.speed
+        self.length = settings.start_length
         
-        '''
+    def grow(self) -> None:
+        self.length += 1
+        
+
+    
+    
+        
+
+
+
+class SnakeGame:
+    def __init__(self, size):
+        self.screen = pygame.display.set_mode((size * settings.scale, size * settings.scale))
+        self.size = size
+        self.grid = []
+        for i in range(size):
+            self.grid.append([0 for x in range(self.size)])
+
+        self.snake = Snake()
+        self.food = Food(self.size)
+
+
+
+
+
+    def spawnFood():
+        pass
+
+    def tick(self): 
+        for i, row in enumerate(self.grid):
+            for j, tile in enumerate(row):
+                if tile > 0:
+                    tile -= 1
+                
+                match tile:
+                    case -1:
+                        pygame.draw.rect(self.screen, (0, 255, 0), (), )
+                    case _:
+                        pass
+                    
+
+                
+
+
+
+
+
+
 
 
 if __name__=="__main__":
-    
+
     settings.init()
     pygame.init()
+
+    game = SnakeGame(6)
     
     pygame.display.set_caption("Snake")
     img = pygame.image.load('snake-icon.png')
