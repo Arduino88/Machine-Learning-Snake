@@ -83,8 +83,6 @@ class DenseLayer:
 class NeuralNetwork:
     def __init__(self):
         self.layers = []
-        self.loss = None
-        self.learningRate = None
 
     def addLayer(self, layer):
         self.layers.append(layer)
@@ -92,8 +90,8 @@ class NeuralNetwork:
     def forwardPropagate(self, input):
         for i, layer in enumerate(self.layers):
             print('i', i)
-            if i == len(self.layers) - 1:
-                print('layer input:', input)
+            if i == 0:
+                print('network input:', input)
             input = layer.calculateOutputs(input)
 
         return input

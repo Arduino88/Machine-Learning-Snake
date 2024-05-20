@@ -2,6 +2,8 @@ import pygame
 from pygame import Color
 import random
 import settings
+from NeuralNetwork import NeuralNetwork, DenseLayer
+import numpy as np
 
 random.seed(9)
 
@@ -121,8 +123,25 @@ class SnakeGame:
         print(f"GAME OVER! Your score is {self.score}")
         pygame.event.post(pygame.event.Event(pygame.QUIT))
 
+
+class Agent:
+    def __init__(self) -> None:
+        self.brain = NeuralNetwork()
+        self.brain.addLayer(DenseLayer(18, 9, activation='sigmoid'))
+        self.brain.addLayer(DenseLayer(10, 18, activation='sigmoid'))
+        self.brain.addLayer(DenseLayer(10, 10, activation='sigmoid'))
+        self.brain.addLayer(DenseLayer(4, 10, activation='softmax'))
+
+    def action(self, state):
+        return self.brain.forwardPropagate(state)
                 
 if __name__=="__main__":
+
+    #inputs: (dangerLeft, dangerRight, dangerUp, dangerDown, foodDist, up, down, left, right)
+
+
+
+
 
     settings.init()
     pygame.init()
