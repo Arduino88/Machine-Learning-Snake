@@ -7,11 +7,12 @@ from queue import Queue
 random.seed(9)
 
 class Food:
-    def __init__(self):
+    def __init__(self, gridSize):
+        self.gridSize = gridSize
         self.respawn()
-        
-    def respawn(self, gridSize):
-        self.pos = (random.randint(0, gridSize), random.randint(0, gridSize))
+
+    def respawn(self):
+        self.pos = (random.randint(0, self.gridSize), random.randint(0, self.gridSize))
 
 
 
@@ -28,6 +29,16 @@ class Snake:
     def grow(self) -> None:
         self.length += 1
         
+    def move(self):
+        match self.direction:
+            case "down":
+                self.head_coords = (self.head_coords[0] + 1, self.head_coords[1])
+            case "up":
+                self.head_coords = (self.head_coords[0] - 1, self.head_coords[1])
+            case "right":
+                self.head_coords = (self.head_coords[0], self.head_coords[1] + 1)
+            case "left":
+                self.head_coords = (self.head_coords[0], self.head_coords[1] - 1)
 
     
     
@@ -37,7 +48,10 @@ class Snake:
 
 class SnakeGame:
     def __init__(self, size):
+        self.score = 0
         self.screen = pygame.display.set_mode((size * settings.scale, size * settings.scale))
+        self.screen.fill((100, 100, 100))
+
         self.size = size
         self.grid = []
         for i in range(size):
@@ -47,34 +61,60 @@ class SnakeGame:
         self.food = Food(self.size)
 
 
+    def spawnFood(self):
+        self.food.respawn()
 
 
+    def tick(self):
+        growTick = False
+        self.snake.move()
+        print(self.snake.head_coords)
+        
+        if (
+            self.snake.head_coords[0] >= self.size or 
+            self.snake.head_coords[0] < 0 or 
+            self.snake.head_coords[1] >= self.size or 
+            self.snake.head_coords[1] < 0
+        ):
+            self.gameOver()
 
-    def spawnFood():
-        pass
+        elif self.snake.head_coords == self.food.pos:
+            self.spawnFood()
+            self.snake.grow()
+            growTick = True
+            self.score += 1
 
-    def tick(self): 
+        elif self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] > 0:
+            self.gameOver()
+
+        self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] = self.snake.length + 1 # +1 because immediate decrement
+        
+        self.grid[self.food.pos[0]][self.food.pos[1]] = -1
+
         for i, row in enumerate(self.grid):
             for j, tile in enumerate(row):
-                if tile > 0:
-                    tile -= 1
+                if tile > 0 and not growTick:
+                    self.grid[i][j] -= 1
+
+                elif tile < -1:
+                    raise Exception(f"Tile value below -1: ({i}, {j})")
                 
                 match tile:
                     case -1:
-                        pygame.draw.rect(self.screen, (0, 255, 0), (), )
-                    case _:
-                        pass
+                        pygame.draw.rect(self.screen, (0, 255, 0), (i, j, settings.tileSize, settings.tileSize))
                     
+                    case 0:
+                        continue
+                    
+                    case _:
+                        pygame.draw.rect(self.screen, (255, 0, 0), (i, j, settings.tileSize, settings.tileSize))
+                    
+    def gameOver(self):
+        global running
+        running = False
+        print(f"GAME OVER! Your score is {self.score}")
 
                 
-
-
-
-
-
-
-
-
 if __name__=="__main__":
 
     settings.init()
@@ -85,13 +125,9 @@ if __name__=="__main__":
     pygame.display.set_caption("Snake")
     img = pygame.image.load('snake-icon.png')
     pygame.display.set_icon(img)
-    snake = Snake()
-    food = Food()
-    for i in range(snake.length):
-        snake.grow()
 
-    screen = pygame.display.set_mode((settings.columns * settings.scale, settings.columns * settings.scale))
-    screen.fill((100, 100, 100))
+
+
              
     key_queue = Queue(maxsize=10)
     
@@ -106,36 +142,31 @@ if __name__=="__main__":
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.key.key_code('d'):
-                    if snake.direction != 'left':
+                    if game.snake.direction != 'left':
                         key_queue.put('right')
                 elif event.key == pygame.key.key_code('a'):
-                    if snake.direction != 'right':
+                    if game.snake.direction != 'right':
                         key_queue.put('left')
                 elif event.key == pygame.key.key_code('w'):
-                    if snake.direction != 'down':
+                    if game.snake.direction != 'down':
                         key_queue.put('up')
                 elif event.key == pygame.key.key_code('s'):
-                    if snake.direction != 'up':
+                    if game.snake.direction != 'up':
                         key_queue.put('down')
                 
         
         if not key_queue.empty():
             #print(key_queue.qsize())
-            snake.direction = key_queue.get()
-        snake.move()
-                    
+            game.snake.direction = key_queue.get()
+        
         # clear screen
-        pygame.draw.rect(screen,(100, 100, 90), [0, 0 , settings.columns * settings.scale, settings.columns * settings.scale])
-            
-        for segment in snake.segments:
-            if food.column == segment.column and food.row == segment.row: # if segment is on food
-                snake.grow()
-                food.respawn()
+        pygame.draw.rect(game.screen,(100, 100, 90), [0, 0 , settings.columns * settings.scale, settings.columns * settings.scale])
+                
+        game.tick()
+        print(game.grid)
+                    
         
             # draw the segment
-            screen.blit(segment.surface, (segment.column * settings.scale, segment.row * settings.scale))
-        screen.blit(food.surface, (food.x, food.y))
         pygame.display.flip()
-        snake.check_collision()
         pygame.time.delay(settings.delay)
         
