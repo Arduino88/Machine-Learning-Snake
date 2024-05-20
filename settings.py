@@ -1,5 +1,5 @@
 def init():
-    global columns, rows, delay, scale, start_coords, speed, start_length, tileSize
+    global columns, rows, delay, scale, start_coords, speed, start_length, tileSize, pixelScale, startDirection, gameSize
     columns = 20
     rows = 20 # Rows in the window
     delay = 100 # milliseconds between each frame
@@ -8,3 +8,6 @@ def init():
     speed = 1
     start_length = 3
     tileSize = 30
+    pixelScale = 30
+    startDirection = 'down'
+    gameSize = 20

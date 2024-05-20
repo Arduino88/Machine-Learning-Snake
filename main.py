@@ -2,7 +2,6 @@ import pygame
 from pygame import Color
 import random
 import settings
-from queue import Queue
 
 random.seed(9)
 
@@ -12,7 +11,7 @@ class Food:
         self.respawn()
 
     def respawn(self):
-        self.pos = (random.randint(0, self.gridSize), random.randint(0, self.gridSize))
+        self.pos = (random.randint(0, self.gridSize - 1), random.randint(0, self.gridSize - 1))
 
 
 
@@ -22,7 +21,7 @@ class Snake:
     
     def __init__(self) -> None:
         self.head_coords = settings.start_coords
-        self.direction = "right"
+        self.direction = settings.startDirection
         self.speed = settings.speed
         self.length = settings.start_length
         
@@ -31,12 +30,12 @@ class Snake:
         
     def move(self):
         match self.direction:
-            case "down":
-                self.head_coords = (self.head_coords[0] + 1, self.head_coords[1])
-            case "up":
-                self.head_coords = (self.head_coords[0] - 1, self.head_coords[1])
             case "right":
                 self.head_coords = (self.head_coords[0], self.head_coords[1] + 1)
+            case "up":
+                self.head_coords = (self.head_coords[0] - 1, self.head_coords[1])
+            case "down":
+                self.head_coords = (self.head_coords[0] + 1, self.head_coords[1])
             case "left":
                 self.head_coords = (self.head_coords[0], self.head_coords[1] - 1)
 
@@ -48,8 +47,9 @@ class Snake:
 
 class SnakeGame:
     def __init__(self, size):
+        self.running = True
         self.score = 0
-        self.screen = pygame.display.set_mode((size * settings.scale, size * settings.scale))
+        self.screen = pygame.display.set_mode((size * settings.pixelScale, size * settings.pixelScale)) #settings.scale might be unused now
         self.screen.fill((100, 100, 100))
 
         self.size = size
@@ -59,7 +59,7 @@ class SnakeGame:
 
         self.snake = Snake()
         self.food = Food(self.size)
-
+        self.grid[self.food.pos[0]][self.food.pos[1]] = -1
 
     def spawnFood(self):
         self.food.respawn()
@@ -77,42 +77,49 @@ class SnakeGame:
             self.snake.head_coords[1] < 0
         ):
             self.gameOver()
+            print('hit border')
 
         elif self.snake.head_coords == self.food.pos:
             self.spawnFood()
+            self.grid[self.food.pos[0]][self.food.pos[1]] = -1
             self.snake.grow()
             growTick = True
             self.score += 1
 
         elif self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] > 0:
             self.gameOver()
+            print('hit snake')
+            
 
-        self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] = self.snake.length + 1 # +1 because immediate decrement
+        if not growTick and self.running:
+            self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] = self.snake.length + 1 # +1 because immediate decrement
         
-        self.grid[self.food.pos[0]][self.food.pos[1]] = -1
+        elif self.running:
+            self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] = self.snake.length
+        
+        if self.running:
+            for i, row in enumerate(self.grid):
+                for j, tile in enumerate(row):
+                    if tile > 0 and not growTick:
+                        self.grid[i][j] -= 1
 
-        for i, row in enumerate(self.grid):
-            for j, tile in enumerate(row):
-                if tile > 0 and not growTick:
-                    self.grid[i][j] -= 1
-
-                elif tile < -1:
-                    raise Exception(f"Tile value below -1: ({i}, {j})")
-                
-                match tile:
-                    case -1:
-                        pygame.draw.rect(self.screen, (0, 255, 0), (i, j, settings.tileSize, settings.tileSize))
+                    elif tile < -1:
+                        raise Exception(f"Tile value below -1: ({i}, {j})")
                     
-                    case 0:
-                        continue
-                    
-                    case _:
-                        pygame.draw.rect(self.screen, (255, 0, 0), (i, j, settings.tileSize, settings.tileSize))
+                    match tile:
+                        case -1:
+                            pygame.draw.rect(self.screen, (0, 255, 0), (j * settings.pixelScale, i * settings.pixelScale, settings.pixelScale, settings.pixelScale))
+                        
+                        case 0:
+                            continue
+                        
+                        case _:
+                            pygame.draw.rect(self.screen, (255, 0, 0), (j * settings.pixelScale, i * settings.pixelScale, settings.pixelScale, settings.pixelScale))
                     
     def gameOver(self):
-        global running
-        running = False
+        self.running = False
         print(f"GAME OVER! Your score is {self.score}")
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
 
                 
 if __name__=="__main__":
@@ -120,50 +127,56 @@ if __name__=="__main__":
     settings.init()
     pygame.init()
 
-    game = SnakeGame(6)
+    '''
+    Cursor Parking:
+
+    
+    '''
+
+    game = SnakeGame(settings.gameSize)
     
     pygame.display.set_caption("Snake")
     img = pygame.image.load('snake-icon.png')
     pygame.display.set_icon(img)
 
-
-
-             
-    key_queue = Queue(maxsize=10)
-    
-    running = True
+    key_queue = []
     
 
     # main loop
-    while running:
+    while game.running:
+        #for row in game.grid:
+            #print(row)
+        
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                game.running = False
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.key.key_code('d'):
                     if game.snake.direction != 'left':
-                        key_queue.put('right')
+                        key_queue.append('right')
                 elif event.key == pygame.key.key_code('a'):
                     if game.snake.direction != 'right':
-                        key_queue.put('left')
+                        key_queue.append('left')
                 elif event.key == pygame.key.key_code('w'):
                     if game.snake.direction != 'down':
-                        key_queue.put('up')
+                        key_queue.append('up')
                 elif event.key == pygame.key.key_code('s'):
                     if game.snake.direction != 'up':
-                        key_queue.put('down')
+                        key_queue.append('down')
                 
         
-        if not key_queue.empty():
-            #print(key_queue.qsize())
-            game.snake.direction = key_queue.get()
+        if key_queue:
+            print(key_queue)
+            game.snake.direction = key_queue.pop(-1)
+            
         
         # clear screen
         pygame.draw.rect(game.screen,(100, 100, 90), [0, 0 , settings.columns * settings.scale, settings.columns * settings.scale])
                 
         game.tick()
-        print(game.grid)
+        
                     
         
             # draw the segment
