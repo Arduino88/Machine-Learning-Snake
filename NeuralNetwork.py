@@ -11,9 +11,10 @@ def relu(x):
 
 
 def softmax(inputs):
-    print('softmax inputs', inputs)
+    #print('softmax inputs', inputs)
     exp_scores = np.exp(inputs)
-    probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+    #print('softmax exp:', exp_scores)
+    probs = exp_scores / np.sum(exp_scores)
     #print('numpy sum', sum(np.sum(exp_scores, axis=1, keepdims=True)))
     #print('probs:', probs)
     return probs
@@ -50,7 +51,7 @@ class DenseLayer:
         output = np.zeros(self.count)
 
         if self.activation == 'sigmoid' or self.activation == 'relu':
-            for i, row in enumerate(self.neurons):
+            for i, neuron in enumerate(self.neurons):
 
                 temp = np.sum(np.dot(inputs, neuron.weights)) + neuron.bias
                 match self.activation:
@@ -95,16 +96,6 @@ class NeuralNetwork:
             input = layer.calculateOutputs(input)
 
         return input
+    
 
-def main():
 
-    testNet = NeuralNetwork()
-    testNet.addLayer(DenseLayer(8, 8, activation='sigmoid'))
-    testNet.addLayer(DenseLayer(10, 10, activation='sigmoid'))
-    testNet.addLayer(DenseLayer(4,10, activation='softmax'))
-
-    #for layer in testNet.layers:
-        #layer.print()
-
-if __name__ == '__main__':
-    main()

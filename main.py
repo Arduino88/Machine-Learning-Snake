@@ -2,7 +2,7 @@ import pygame
 from pygame import Color
 import random
 import settings
-from NeuralNetwork import NeuralNetwork, DenseLayer
+from NeuralNetwork import NeuralNetwork, DenseLayer, Perceptron, sigmoid, relu, softmax
 import numpy as np
 
 random.seed(9)
@@ -67,19 +67,30 @@ class SnakeGame:
         self.food.respawn()
 
 
+    def isValid(self, coords):
+        
+        if (
+            coords[0] >= self.size or 
+            coords[0] < 0 or 
+            coords[1] >= self.size or 
+            coords[1] < 0
+        ):
+            return False
+        
+        if self.grid[coords[0]][coords[1]] > 0:
+            return False
+        
+        return True
+    
+
+
     def tick(self):
         growTick = False
         self.snake.move()
         print(self.snake.head_coords)
         
-        if (
-            self.snake.head_coords[0] >= self.size or 
-            self.snake.head_coords[0] < 0 or 
-            self.snake.head_coords[1] >= self.size or 
-            self.snake.head_coords[1] < 0
-        ):
+        if not self.isValid(self.snake.head_coords):
             self.gameOver()
-            print('hit border')
 
         elif self.snake.head_coords == self.food.pos:
             self.spawnFood()
@@ -88,10 +99,6 @@ class SnakeGame:
             growTick = True
             self.score += 1
 
-        elif self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] > 0:
-            self.gameOver()
-            print('hit snake')
-            
 
         if not growTick and self.running:
             self.grid[self.snake.head_coords[0]][self.snake.head_coords[1]] = self.snake.length + 1 # +1 because immediate decrement
@@ -123,6 +130,57 @@ class SnakeGame:
         print(f"GAME OVER! Your score is {self.score}")
         pygame.event.post(pygame.event.Event(pygame.QUIT))
 
+    def snakeDistToFood(self):
+        return abs(self.snake.head_coords[0] - self.food.pos[0]) + abs(self.snake.head_coords[1] - self.food.pos[1])
+    
+    def getDanger(self) -> tuple:
+        danger = [0, 0, 0, 0]
+
+    
+        if not self.isValid((self.snake.head_coords[0] - 1, self.snake.head_coords[1])):
+            danger[0] = 1
+        
+        if not self.isValid((self.snake.head_coords[0] + 1, self.snake.head_coords[1])):
+            danger[1] = 1
+
+        if not self.isValid((self.snake.head_coords[0], self.snake.head_coords[1] - 1)):
+            danger[2] = 1
+
+        if not self.isValid((self.snake.head_coords[0], self.snake.head_coords[1] + 1)):
+            danger[3] = 1
+
+        match self.snake.direction:
+            case 'up':
+                danger[0] = 0
+            case 'down':
+                danger[1] = 0
+            case 'right':
+                danger[2] = 0
+            case 'left':
+                danger[3] = 0
+
+        return tuple(danger)
+
+
+
+    def getState(self):
+        up = 0
+        down = 0
+        left = 0
+        right = 0
+        dangerLeft, dangerRight, dangerUp, dangerDown = self.getDanger()
+        foodDist = self.snakeDistToFood()
+        match self.snake.direction:
+            case 'up':
+                up = 1
+            case 'down':
+                down = 1
+            case 'right':
+                right = 1
+            case 'left':
+                left = 1
+
+        return (dangerLeft, dangerRight, dangerUp, dangerDown, foodDist, up, down, left, right)
 
 class Agent:
     def __init__(self) -> None:
@@ -132,16 +190,12 @@ class Agent:
         self.brain.addLayer(DenseLayer(10, 10, activation='sigmoid'))
         self.brain.addLayer(DenseLayer(4, 10, activation='softmax'))
 
-    def action(self, state):
+    def action(self, state): 
         return self.brain.forwardPropagate(state)
                 
 if __name__=="__main__":
 
-    #inputs: (dangerLeft, dangerRight, dangerUp, dangerDown, foodDist, up, down, left, right)
-
-
-
-
+    testAgent = Agent()
 
     settings.init()
     pygame.init()
@@ -170,26 +224,25 @@ if __name__=="__main__":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game.running = False
-            
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.key.key_code('d'):
-                    if game.snake.direction != 'left':
-                        key_queue.append('right')
-                elif event.key == pygame.key.key_code('a'):
-                    if game.snake.direction != 'right':
-                        key_queue.append('left')
-                elif event.key == pygame.key.key_code('w'):
-                    if game.snake.direction != 'down':
-                        key_queue.append('up')
-                elif event.key == pygame.key.key_code('s'):
-                    if game.snake.direction != 'up':
-                        key_queue.append('down')
-                
-        
-        if key_queue:
-            print(key_queue)
-            game.snake.direction = key_queue.pop(-1)
-            
+
+
+                                
+        state = np.array(game.getState())
+        action = testAgent.action(state)
+        print(action)
+        selectedActionIndex = np.argmax(action)
+        print(selectedActionIndex)
+
+        match selectedActionIndex:
+            case 0:
+                game.snake.direction = 'up'
+            case 1:
+                game.snake.direction = 'down'
+            case 2:
+                game.snake.direction = 'left'
+            case 3:
+                game.snake.direction = 'right'
+
         
         # clear screen
         pygame.draw.rect(game.screen,(100, 100, 90), [0, 0 , settings.columns * settings.scale, settings.columns * settings.scale])
@@ -200,5 +253,5 @@ if __name__=="__main__":
         
             # draw the segment
         pygame.display.flip()
-        pygame.time.delay(settings.delay)
+        #pygame.time.delay(settings.delay)
         
