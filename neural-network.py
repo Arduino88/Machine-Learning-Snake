@@ -21,14 +21,13 @@ def softmax(inputs):
 
 
 class Perceptron:
-    def __init__(self, weightShape: tuple):
+    def __init__(self, n):
     
-        # number of nodes in the previous layer
-        n = weightShape[0] * weightShape[1]
+        # number of nodes in the previous laye
         # calculate the range for the weights
         std = sqrt(2.0 / n)
         # generate random numbers
-        numbers = np.random.randn(weightShape[0], weightShape[1])
+        numbers = np.random.randn(n)
         # scale to the desired range
         self.weights = numbers * std
         self.bias = 0
@@ -36,39 +35,35 @@ class Perceptron:
         #print('rand weights test:', self.weights)
 
 class DenseLayer:
-    def __init__(self, width, height, weightShape, activation):
+    def __init__(self, n, weightShape, activation):
         self.activation  = activation
         self.neurons = []
-        self.shape = (width, height)
-        for i in range(width):
-            tempArray = []
-            for j in range(height):
-                tempArray.append(Perceptron(weightShape))
-            self.neurons.append(tempArray)
+        self.count = n
+        for i in range(n):
+            self.neurons.append(Perceptron(weightShape))
         
         #for row in self.neurons:
             #for neuron in row:
                 #print(neuron.weights, neuron.bias)
 
     def calculateOutputs(self, inputs):
-        output = np.zeros(self.shape)
-    
+        output = np.zeros(self.count)
+
         if self.activation == 'sigmoid' or self.activation == 'relu':
             for i, row in enumerate(self.neurons):
-                for j, neuron in enumerate(row):
-                    temp = np.sum(np.dot(inputs, neuron.weights)) + neuron.bias
-                    match self.activation:
-                        case 'sigmoid':
-                            output[i][j] = sigmoid(temp)
 
-                        case 'relu':
-                            output[i][j] = relu(temp)
+                temp = np.sum(np.dot(inputs, neuron.weights)) + neuron.bias
+                match self.activation:
+                    case 'sigmoid':
+                        output[i] = sigmoid(temp)
+
+                    case 'relu':
+                        output[i] = relu(temp)
 
         elif self.activation == 'softmax':
-            for i, row in enumerate(self.neurons):
-                for j, neuron in enumerate(row):
-                    temp = np.sum(np.dot(inputs, neuron.weights)) + neuron.bias
-                    output[i][j] = temp
+            for i, neuron in enumerate(self.neurons):
+                temp = np.sum(np.dot(inputs, neuron.weights)) + neuron.bias
+                output[i] = temp
 
             output = softmax(output)
 
@@ -78,14 +73,12 @@ class DenseLayer:
         return output
 
     def shape(self) -> tuple:
-        return (len(self.neurons), len(self.neurons[0]))
+        return (len(self.neurons))
     
     def print(self) -> None:
-        for row in self.neurons:
-            for neuron in row:
-                print(f'Neuron Weight: {neuron.weights}')
-                print(f'Neuron Bias: {neuron.bias}')
-
+        for neuron in self.neurons:
+            print(f'Neuron Weight: {neuron.weights}')
+            print(f'Neuron Bias: {neuron.bias}')
 
 class NeuralNetwork:
     def __init__(self):
@@ -108,13 +101,12 @@ class NeuralNetwork:
 def main():
 
     testNet = NeuralNetwork()
-    testNet.addLayer(DenseLayer(28, 28, weightShape=(28, 28), activation='sigmoid'))
-    testNet.addLayer(DenseLayer(10, 10, weightShape=(28, 28), activation='sigmoid'))
-    testNet.addLayer(DenseLayer(1, 10, weightShape=(10, 10), activation='softmax'))
+    testNet.addLayer(DenseLayer(8, 8, activation='sigmoid'))
+    testNet.addLayer(DenseLayer(10, 10, activation='sigmoid'))
+    testNet.addLayer(DenseLayer(4,10, activation='softmax'))
 
     #for layer in testNet.layers:
         #layer.print()
-   
 
 if __name__ == '__main__':
     main()
