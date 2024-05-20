@@ -33,8 +33,6 @@ class Perceptron:
         self.weights = numbers * std
         self.bias = 0
 
-
-
         #print('rand weights test:', self.weights)
 
 class DenseLayer:
@@ -87,6 +85,7 @@ class DenseLayer:
             for neuron in row:
                 print(f'Neuron Weight: {neuron.weights}')
                 print(f'Neuron Bias: {neuron.bias}')
+
 
 class NeuralNetwork:
     def __init__(self):
