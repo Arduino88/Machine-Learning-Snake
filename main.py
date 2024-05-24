@@ -190,21 +190,54 @@ class SnakeGame:
 
         return (dangerLeft, dangerRight, dangerUp, dangerDown, foodDist, up, down, left, right)
 
-class Agent:
-    def __init__(self) -> None:
-        self.fitness = 0
-        self.brain = NeuralNetwork()
-        self.brain.addLayer(DenseLayer(18, 9, activation='sigmoid'))
-        self.brain.addLayer(DenseLayer(10, 18, activation='sigmoid'))
-        self.brain.addLayer(DenseLayer(10, 10, activation='sigmoid'))
-        self.brain.addLayer(DenseLayer(4, 10, activation='softmax'))
+class SnakeEnv:
+    def  __init__(self, gameState):
+        self.done = False
+        self.game = SnakeGame(size=30)
 
-    def action(self, state): 
-        return self.brain.forwardPropagate(state)
+    def step(self, action):
+        self.game.snake.direction = action
+        self.game.tick()
+
+
+        return newGameState, reward, done
+
+
+class Agent(nn.Module):
+    def __init__(self, inputDim, outputDim) -> None:
+        super(Agent, self).__init__()
+        self.fc1 = nn.Linear(inputDim, 128)
+        self.fc2 = nn.Linear(128, outputDim)
+
+    def forward(self, x):
+        f = torch.relu(self.fc1(x))
+        return torch.softmax(self.fc2(f), dim =1)
+    
+    def backward(agent, loss):
+        pass
+
+        
+def trainAgent(agent, env, numEpochs):
+    for epoch in range(numEpochs):
+        while not env.done():
+            action = agent.forward(state)
+
+            newState, reward, done = env.step(action)
+
+            loss = calculateLoss(agent, state, action, reward, newState)
+            agent.backward(loss)
+
                 
 if __name__=="__main__":
 
     batchSize = 300
+
+
+    env = snakeEnv(gameState)
+
+    agent = Agent(inputDim, outputDim)
+
+
 
     agents = [Agent() for _ in range(batchSize)]
     games = [SnakeGame(settings.gameSize) for _ in range(batchSize)]
