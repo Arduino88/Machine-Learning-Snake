@@ -5,6 +5,10 @@ import settings
 from NeuralNetwork import NeuralNetwork, DenseLayer, Perceptron, sigmoid, relu, softmax
 import numpy as np
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
 random.seed(9)
 
 class Food:
@@ -44,15 +48,13 @@ class Snake:
     
     
         
-
-
-
 class SnakeGame:
     def __init__(self, size):
         self.running = True
         self.score = 0
         self.screen = pygame.display.set_mode((size * settings.pixelScale, size * settings.pixelScale)) #settings.scale might be unused now
         self.screen.fill((100, 100, 100))
+        self.moves = settings.startingMoves
 
         self.size = size
         self.grid = []
@@ -85,6 +87,11 @@ class SnakeGame:
 
 
     def tick(self):
+        self.moves -= 1
+        if self.moves < 0:
+            self.running = False
+            return
+
         growTick = False
         self.snake.move()
         print(self.snake.head_coords)
@@ -97,7 +104,7 @@ class SnakeGame:
             self.grid[self.food.pos[0]][self.food.pos[1]] = -1
             self.snake.grow()
             growTick = True
-            self.score += 1
+            self.score += 5
 
 
         if not growTick and self.running:
@@ -170,6 +177,7 @@ class SnakeGame:
         right = 0
         dangerLeft, dangerRight, dangerUp, dangerDown = self.getDanger()
         foodDist = self.snakeDistToFood()
+        foodDist = foodDist / (self.size ^ 2)
         match self.snake.direction:
             case 'up':
                 up = 1
@@ -184,6 +192,7 @@ class SnakeGame:
 
 class Agent:
     def __init__(self) -> None:
+        self.fitness = 0
         self.brain = NeuralNetwork()
         self.brain.addLayer(DenseLayer(18, 9, activation='sigmoid'))
         self.brain.addLayer(DenseLayer(10, 18, activation='sigmoid'))
@@ -195,63 +204,70 @@ class Agent:
                 
 if __name__=="__main__":
 
-    testAgent = Agent()
+    batchSize = 300
 
-    settings.init()
-    pygame.init()
+    agents = [Agent() for _ in range(batchSize)]
+    games = [SnakeGame(settings.gameSize) for _ in range(batchSize)]
+    print(agents, games)
 
-    '''
-    Cursor Parking:
+    for i in range(batchSize):
 
-    
-    '''
+        settings.init()
+        pygame.init()
 
-    game = SnakeGame(settings.gameSize)
-    
-    pygame.display.set_caption("Snake")
-    img = pygame.image.load('snake-icon.png')
-    pygame.display.set_icon(img)
-
-    key_queue = []
-    
-
-    # main loop
-    while game.running:
-        #for row in game.grid:
-            #print(row)
-        
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game.running = False
-
-
-                                
-        state = np.array(game.getState())
-        action = testAgent.action(state)
-        print(action)
-        selectedActionIndex = np.argmax(action)
-        print(selectedActionIndex)
-
-        match selectedActionIndex:
-            case 0:
-                game.snake.direction = 'up'
-            case 1:
-                game.snake.direction = 'down'
-            case 2:
-                game.snake.direction = 'left'
-            case 3:
-                game.snake.direction = 'right'
+        '''
+        Cursor Parking:
 
         
-        # clear screen
-        pygame.draw.rect(game.screen,(100, 100, 90), [0, 0 , settings.columns * settings.scale, settings.columns * settings.scale])
-                
-        game.tick()
+        '''
         
+        pygame.display.set_caption("Snake")
+        img = pygame.image.load('snake-icon.png')
+        pygame.display.set_icon(img)
+
+        key_queue = []
+        
+
+        # main loop
+        while games[i].running:
+            #for row in game.grid:
+                #print(row)
+            
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    games[i].running = False
+
+
+            
+            state = np.array(games[i].getState())
+            print('agent', i, agents[i])
+            action = agents[i].action(state)
+            print(action)
+            selectedActionIndex = np.argmax(action)
+            print(selectedActionIndex)
+
+            match selectedActionIndex:
+                case 0:
+                    games[i].snake.direction = 'up'
+                case 1:
+                    games[i].snake.direction = 'down'
+                case 2:
+                    games[i].snake.direction = 'left'
+                case 3:
+                    games[i].snake.direction = 'right'
+
+            
+            # clear screen
+            pygame.draw.rect(games[i].screen,(100, 100, 90), [0, 0 , settings.columns * settings.scale, settings.columns * settings.scale])
                     
-        
-            # draw the segment
-        pygame.display.flip()
-        #pygame.time.delay(settings.delay)
+            games[i].tick()
+            
+                        
+            
+                # draw the segment
+            pygame.display.flip()
+
+            agents[i].fitness = games[i].score
+            #pygame.time.delay(settings.delay)
         
