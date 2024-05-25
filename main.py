@@ -176,8 +176,6 @@ class SnakeGame:
         left = 0
         right = 0
         dangerLeft, dangerRight, dangerUp, dangerDown = self.getDanger()
-        foodDist = self.snakeDistToFood()
-        foodDist = foodDist / (self.size ^ 2)
         match self.snake.direction:
             case 'up':
                 up = 1
@@ -188,7 +186,7 @@ class SnakeGame:
             case 'left':
                 left = 1
 
-        return (dangerLeft, dangerRight, dangerUp, dangerDown, foodDist, up, down, left, right)
+        return (dangerLeft, dangerRight, dangerUp, dangerDown, up, down, left, right)
 
 class SnakeEnv:
     def  __init__(self, gameState):
@@ -198,9 +196,12 @@ class SnakeEnv:
     def step(self, action):
         self.game.snake.direction = action
         self.game.tick()
+        newGameState = self.game.getState()
+        reward = 1 / (self.game.snakeDistToFood() ** 3)
 
 
-        return newGameState, reward, done
+
+        return newGameState, reward, self.done
 
 
 class Agent(nn.Module):
