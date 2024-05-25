@@ -189,7 +189,7 @@ class SnakeGame:
         return (dangerLeft, dangerRight, dangerUp, dangerDown, up, down, left, right)
 
 class SnakeEnv:
-    def  __init__(self, gameState):
+    def  __init__(self):
         self.done = False
         self.game = SnakeGame(size=30)
 
@@ -209,13 +209,19 @@ class Agent(nn.Module):
         super(Agent, self).__init__()
         self.fc1 = nn.Linear(inputDim, 128)
         self.fc2 = nn.Linear(128, outputDim)
+        self.fc1.bias = nn.Parameter(torch.zeros((128)))
+        self.fc2.bias = nn.Parameter(torch.zeros((outputDim)))
+        self.fc1.weight = nn.Parameter(torch.randn((inputDim, 128)))
+        self.fc1.weight = nn.Parameter(torch.randn((128, outputDim)))
 
     def forward(self, x):
+        print('forward', x)
         f = torch.relu(self.fc1(x))
         return torch.softmax(self.fc2(f), dim =1)
     
     def backward(agent, loss):
         pass
+
 
         
 def trainAgent(agent, env, numEpochs):
@@ -234,13 +240,12 @@ if __name__=="__main__":
     batchSize = 300
 
 
-    env = snakeEnv(gameState)
-
-    agent = Agent(inputDim, outputDim)
+    env = SnakeEnv()
 
 
 
-    agents = [Agent() for _ in range(batchSize)]
+
+    agents = [Agent(8, 4) for _ in range(batchSize)]
     games = [SnakeGame(settings.gameSize) for _ in range(batchSize)]
     print(agents, games)
 
@@ -274,9 +279,9 @@ if __name__=="__main__":
 
 
             
-            state = np.array(games[i].getState())
+            state = torch.tensor(games[i].getState())
             print('agent', i, agents[i])
-            action = agents[i].action(state)
+            action = agents[i].forward(state)
             print(action)
             selectedActionIndex = np.argmax(action)
             print(selectedActionIndex)
