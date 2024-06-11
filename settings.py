@@ -1,5 +1,5 @@
 def init():
-    global columns, rows, delay, scale, start_coords, speed, start_length, tileSize, pixelScale, startDirection, gameSize, startingMoves
+    global columns, rows, delay, scale, start_coords, speed, start_length, tileSize, pixelScale, startDirection, gameSize, startingMoves, mutationRate
     columns = 20
     rows = 20 # Rows in the window
     delay = 100 # milliseconds between each frame
@@ -12,3 +12,4 @@ def init():
     startDirection = 'down'
     gameSize = 20
     startingMoves = 200
+    mutationRate = 0.25

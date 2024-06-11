@@ -1,6 +1,7 @@
 import numpy as np
 from os.path  import join
 from math import sqrt
+import settings
 
 def sigmoid(x):
     x = np.clip(x, -500, 500) # limit range of x to avoid overflow
@@ -34,6 +35,20 @@ class Perceptron:
         self.bias = 0
 
         #print('rand weights test:', self.weights)
+
+
+    def mutate(self):
+        random = np.random.rand()
+        if random < settings.mutationRate:
+            self.bias += np.random.randn() * 0.1
+
+        for i in range(len(self.weights)):
+            random = np.random.rand()
+            if random < settings.mutationRate:
+                #print('mutation')
+                self.weights[i] = np.random.randn()
+                
+
 
 class DenseLayer:
     def __init__(self, n, weightShape, activation):
@@ -76,6 +91,11 @@ class DenseLayer:
     def shape(self) -> tuple:
         return (len(self.neurons))
     
+    def mutate(self):
+        for neuron in self.neurons:
+            neuron.mutate()
+
+    
     def print(self) -> None:
         for neuron in self.neurons:
             print(f'Neuron Weight: {neuron.weights}')
@@ -90,12 +110,13 @@ class NeuralNetwork:
 
     def forwardPropagate(self, input):
         for i, layer in enumerate(self.layers):
-            print('i', i)
-            if i == 0:
-                print('network input:', input)
+            #print('i', i)
+            #if i == 0:
+                #print('network input:', input)
             input = layer.calculateOutputs(input)
 
         return input
     
-
-
+    def mutate(self):
+        for layer in self.layers:
+            layer.mutate()
