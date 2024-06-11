@@ -188,17 +188,16 @@ class Agent:
         self.fitness = 0
         self.brain = NeuralNetwork()
         self.brain.addLayer(DenseLayer(16, inputCount, activation='sigmoid'))
-        self.brain.addLayer(DenseLayer(10, 16, activation='sigmoid'))
-        self.brain.addLayer(DenseLayer(10, 10, activation='sigmoid'))
-        self.brain.addLayer(DenseLayer(4, 10, activation='softmax'))
+        self.brain.addLayer(DenseLayer(8, 16, activation='sigmoid'))
+        self.brain.addLayer(DenseLayer(4, 8, activation='softmax'))
 
     def action(self, state): 
         return self.brain.forwardPropagate(state)
                 
 if __name__=="__main__":
 
-    batchSize = 50
-    epochs = 200
+    batchSize = 200
+    epochs = 100
     games = [SnakeGame() for _ in range(batchSize)]
     inputCount = 16 # + settings.rows * settings.columns
     agents = [Agent(inputCount) for _ in range(batchSize)]
@@ -242,6 +241,7 @@ if __name__=="__main__":
                 #for x in games[i].grid:
                 #   initialState.extend(x)
                 state = np.array(initialState)
+                #print('state', state)
                 #print('agent', i, agents[i])
                 action = agents[i].action(state)
                 #print(action)
@@ -269,27 +269,32 @@ if __name__=="__main__":
                     # draw the segment
                 pygame.display.flip()
 
-                agents[i].fitness = max(games[i].score * 5 + games[i].step / 2, 1)
+                agents[i].fitness = max(games[i].score * 5 + games[i].step, 1)
                 #pygame.time.delay(settings.delay)
             
             fitnesses.append(float(agents[i].fitness))
 
-        print(fitnesses)
+        #print(fitnesses)
         print(f'ENDING EPOCH {epoch}')
         for game in games:
             game.reset()
+        
+        avg = sum(fitnesses)/len(fitnesses)
 
 
         maxReward = max(fitnesses)
+        bestParentIndex = fitnesses.index(maxReward)
+        bestParent = copy.deepcopy(agents[bestParentIndex])
         fitnessSum = sum(fitnesses)
         print('fitness sum', fitnessSum)
         for i in range(len(fitnesses)):
             fitnesses[i] /= fitnessSum
 
 
-        print('fitness percentages', fitnesses)
+        #print('fitness percentages', fitnesses)
         print('sum of fitnesses', sum(fitnesses))
         print('maxReward', maxReward)
+        print('avg reward', avg)
         
 
         #for i in range(1, len(fitnesses)):
@@ -297,8 +302,10 @@ if __name__=="__main__":
 
         #print(fitnesses)
 
-        newGeneration = []
-        for i in range(len(agents)):
+
+
+        newGeneration = [bestParent]
+        for i in range(1, len(agents)):
             #select parent
             parent = random.choices(agents, weights = fitnesses)[0]
 
@@ -309,7 +316,6 @@ if __name__=="__main__":
 
         agents.clear()
         agents = newGeneration
-
 
 
 
